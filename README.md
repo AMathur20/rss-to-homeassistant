@@ -3,7 +3,7 @@
 ![Build status](https://github.com/joonas-fi/rss-to-homeassistant/workflows/Build/badge.svg)
 [![Download](https://img.shields.io/github/downloads/joonas-fi/rss-to-homeassistant/total.svg?style=for-the-badge)](https://github.com/joonas-fi/rss-to-homeassistant/releases)
 
-Pushes RSS feeds into Home Assistant as Markdown, so they can be displayed natively.
+Pushes RSS feeds or JSON-based menus (like Nutrislice) into Home Assistant as Markdown, so they can be displayed natively.
 
 For more background, see my [blog post](https://joonas.fi/2020/08/displaying-rss-feed-with-home-assistant/).
 
@@ -34,7 +34,13 @@ You need to create `config.json`:
 		{
 			"id": "skrolli",
 			"url": "https://skrolli.fi/feed/",
-			"poll_interval": "15m"
+			"poll_interval": "15m",
+			"format": "rss"
+		},
+		{
+			"id": "school_menu",
+			"url": "https://district.api.nutrislice.com/menu/api/...",
+			"format": "json"
 		}
 	]
 }
@@ -68,6 +74,25 @@ Example configuration with different intervals:
 ```
 
 If you don't use MQTT username/password, you can remove the whole `"credentials": {...}` section.
+
+### Hybrid RSS/JSON Support
+
+This software is "format-agnostic" and can automatically detect the data type based on the URL or response headers.
+
+- **RSS**: Standard RSS feeds (XML).
+- **JSON (Nutrislice)**: Supports Nutrislice API endpoints for school menus. The system automatically extracts today's menu items.
+
+#### Manual Format Override
+
+You can manually specify the format in `config.json` using the `format` field:
+- `"auto"` (Default): Auto-detect based on URL/Headers.
+- `"rss"`: Force legacy RSS parsing.
+- `"json"`: Force Nutrislice JSON parsing.
+
+You can also override all feeds globally using the `DATA_FORMAT` environment variable:
+```console
+DATA_FORMAT=json ./rss-to-homeassistant
+```
 
 
 How to use

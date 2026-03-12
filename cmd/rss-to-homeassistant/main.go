@@ -131,6 +131,7 @@ type configRSSFeed struct {
 	Id           string        `json:"id"`
 	URL          string        `json:"url"`
 	PollInterval string        `json:"poll_interval,omitempty"`
+	Format       string        `json:"format,omitempty"` // "auto", "rss", "json"
 	Settings     *feedSettings `json:"settings,omitempty"`
 }
 
@@ -155,8 +156,19 @@ func readConfigurationFile() (*config, error) {
 		return nil, err
 	}
 
+	// Global override via environment variable
+	envFormat := os.Getenv("DATA_FORMAT")
+
 	for i := range conf.RSSFeeds {
 		rssFeed := &conf.RSSFeeds[i]
+
+		if envFormat != "" {
+			rssFeed.Format = envFormat
+		}
+
+		if rssFeed.Format == "" {
+			rssFeed.Format = "auto"
+		}
 
 		// Home Assistant tolerates this but will silently translate to '_'.
 		// but we want to be explicit to avoid confusion.
