@@ -80,7 +80,7 @@ If you don't use MQTT username/password, you can remove the whole `"credentials"
 This software is "format-agnostic" and can automatically detect the data type based on the URL or response headers.
 
 - **RSS**: Standard RSS feeds (XML).
-- **JSON (Nutrislice)**: Supports Nutrislice API endpoints for school menus. The system automatically extracts today's menu items.
+- **JSON (Nutrislice)**: Supports Nutrislice API endpoints for school menus. The system automatically extracts today's menu items and handles date-based URLs dynamically.
 
 #### Manual Format Override
 
@@ -89,10 +89,17 @@ You can manually specify the format in `config.json` using the `format` field:
 - `"rss"`: Force legacy RSS parsing.
 - `"json"`: Force Nutrislice JSON parsing.
 
-You can also override all feeds globally using the `DATA_FORMAT` environment variable:
 ```console
 DATA_FORMAT=json ./rss-to-homeassistant
 ```
+
+#### Automatic Date Handling
+
+For Nutrislice URLs, the program automatically manages the date to ensure the menu is always current:
+- **Dynamic URL Injection**: If your URL contains a date (e.g., `.../2026/02/23/...`), the program will automatically replace it with the correct target date every time it polls.
+- **Smart Date Selection**: If the current local time is **past 2:00 PM**, the system automatically fetches and displays **tomorrow's** menu, so you always see the most relevant upcoming meal.
+
+This means you can paste any valid Nutrislice API URL into the config once, and it will work indefinitely without manual updates.
 
 
 How to use

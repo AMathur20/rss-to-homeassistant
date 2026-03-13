@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -154,8 +155,20 @@ type NutrisliceFood struct {
 	Name string `json:"name"`
 }
 
+var nutrisliceDateRegexp = regexp.MustCompile(`\d{4}/\d{2}/\d{2}`)
+
 func fetchNutrisliceToMarkdown(ctx context.Context, feedConfig configRSSFeed) (*gofeed.Feed, string, error) {
-	res, err := ezhttp.Get(ctx, feedConfig.URL)
+	now := time.Now()
+	targetDate := now
+	if now.Hour() >= 14 { // Past 2pm, use tomorrow's date
+		targetDate = now.AddDate(0, 0, 1)
+	}
+
+	url := feedConfig.URL
+	// Automatically replace date in URL if it matches Nutrislice pattern
+	url = nutrisliceDateRegexp.ReplaceAllString(url, targetDate.Format("2006/01/02"))
+
+	res, err := ezhttp.Get(ctx, url)
 	if err != nil {
 		return nil, "", fmt.Errorf("Menu Unavailable: %w", err)
 	}
@@ -175,7 +188,7 @@ func fetchNutrisliceToMarkdown(ctx context.Context, feedConfig configRSSFeed) (*
 		return nil, "", fmt.Errorf("Menu Unavailable: JSON decode error: %w", err)
 	}
 
-	return &gofeed.Feed{Title: "Menu"}, nutrisliceToMarkdown(nutrislice, time.Now()), nil
+	return &gofeed.Feed{Title: "Menu"}, nutrisliceToMarkdown(nutrislice, now), nil
 }
 
 func nutrisliceToMarkdown(nutrislice NutrisliceResponse, now time.Time) string {
